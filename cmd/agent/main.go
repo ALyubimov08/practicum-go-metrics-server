@@ -3,11 +3,13 @@ package main
 import (
 	"bytes"
 	"fmt"
+	"strconv"
 	"net/http"
 	"runtime"
 	"time"
 	"math"
 	"flag"
+	"os"
 )
 
 var (
@@ -21,6 +23,7 @@ var (
 
 func main() {
 	var (
+		err error
 		serverAddressFlag  string 
 		pollIntervalFlag   int
 		reportIntervalFlag int
@@ -30,6 +33,29 @@ func main() {
 	flag.IntVar(&reportIntervalFlag, "r", 10, "The value for the -r flag")
 	flag.Parse()
 
+
+	environmetAddress, exists := os.LookupEnv("ADDRESS")
+    if exists { serverAddressFlag = environmetAddress }
+	
+	environmetPollInterval, exists := os.LookupEnv("POLL_INTERVAL")
+    if exists {
+		if pollIntervalFlag, err = strconv.Atoi(environmetPollInterval); err != nil {
+			panic(err)
+		}
+	}
+	
+	environmetReportInterval, exists := os.LookupEnv("REPORT_INTERVAL")
+    if exists {                                                                    
+		if reportIntervalFlag, err = strconv.Atoi(environmetReportInterval); err != nil{           
+            panic(err)                                                             
+        }                                                                          
+    }
+
+fmt.Printf("Running with following parameters:\n" +
+	"Server Name:      %s\n" +
+	"Poll Interval:    %d\n" +
+	"Report Interval:  %d\n",
+	serverAddressFlag, pollIntervalFlag, reportIntervalFlag)
 
 	serverAddress  = fmt.Sprintf("http://%s/update/", serverAddressFlag)
 	pollInterval   = time.Duration(pollIntervalFlag) * time.Second

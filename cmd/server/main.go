@@ -8,6 +8,7 @@ import (
 	"github.com/gorilla/mux"
 	"sort"
 	"flag"
+	"os"
 )
 
 // Индекс метрики
@@ -143,6 +144,9 @@ func main() {
 	var serverAddress string
 	flag.StringVar(&serverAddress, "a", "localhost:8080", "The value for the -a flag")
 	flag.Parse()
+
+	environmetAddress, exists := os.LookupEnv("ADDRESS")
+	if exists { serverAddress = environmetAddress }
 
 	storage := make(MemStorage)
 	router := mux.NewRouter()
