@@ -16,6 +16,7 @@ const (
 )
 
 var (
+	metrics     map[string]uint64
 	PollCount   uint64 = 0
 	RandomValue uint64 = 0
 )
@@ -39,7 +40,7 @@ func collectMetrics() {
 	var memStats runtime.MemStats
 	runtime.ReadMemStats(&memStats)
 
-	metrics := map[string]uint64{
+	metrics = map[string]uint64{
 		"Alloc":            memStats.Alloc,
 		"BuckHashSys":      memStats.BuckHashSys,
 		"Frees":            memStats.Frees,
@@ -70,13 +71,6 @@ func collectMetrics() {
 	}
 	PollCount   += 1
     RandomValue = uint64(time.Now().Nanosecond())
-
-	for metricName, metricValue := range metrics {
-		sendMetric("gauge", metricName, metricValue)
-	}
-	sendMetric("counter", "PollCount", PollCount)
-	sendMetric("gauge", "RandomValue", RandomValue)
-
 }
 
 func sendMetric(metricType string, metricName string, metricValue uint64) {
@@ -91,5 +85,9 @@ func sendMetric(metricType string, metricName string, metricValue uint64) {
 
 
 func sendMetrics() {
-	collectMetrics()
+	for metricName, metricValue := range metrics {
+		sendMetric("gauge", metricName, metricValue)
+	}
+	sendMetric("counter", "PollCount", PollCount)
+	sendMetric("gauge", "RandomValue", RandomValue)
 }

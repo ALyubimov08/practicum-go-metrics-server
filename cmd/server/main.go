@@ -5,6 +5,8 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"github.com/gorilla/mux"
+	"sort"
 )
 
 // Индекс метрики
@@ -35,7 +37,6 @@ func GetMetricTypeFromString(metricType string) MetricType {
 
 // Внесение изменений в саму мапу 
 func (ms MemStorage) UpdateMetric(metricName string, metricType MetricType, metricValue interface{}) {
-
 	if metric, ok := ms[metricName]; ok {
 		if metric.Type != metricType {
 			return 
@@ -100,14 +101,54 @@ func (ms *MemStorage) MetricsHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
+func (ms MemStorage) GetValueHandler(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	metricType := GetMetricTypeFromString(vars["metricType"])
+	metricName := vars["metricName"]
+	if metric, ok := ms[metricName]; ok {
+		if metric.Type != metricType {
+			http.Error(w, "Not found", http.StatusNotFound)
+			return
+		}
+
+		value := fmt.Sprintf("%v", metric.Value)
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(value))
+	} else {
+		http.Error(w, "Not found", http.StatusNotFound)
+	}
+}
+
+func (ms MemStorage) GetAllMetricsHandler(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusOK)
+	w.Header().Set("Content-Type", "text/html")
+	fmt.Fprintf(w, "<html><body><h1>Metrics</h1>")
+	var metricNames []string
+	for metricName := range ms {
+		metricNames = append(metricNames, metricName)
+	}
+
+	sort.Strings(metricNames)
+
+	for _, metricName := range metricNames {
+		metric := ms[metricName]
+		fmt.Fprintf(w, "<p>%s: %v</p>", metricName, metric.Value)
+	}
+	fmt.Fprintf(w, "</body></html>")
+}
+
+
 func main() {
 	storage := make(MemStorage)
-	
-	http.HandleFunc("/update/", storage.MetricsHandler)
+
+	router := mux.NewRouter()
+	router.HandleFunc("/value/{metricType}/{metricName}", storage.GetValueHandler).Methods("GET")
+	router.HandleFunc("/update/{metricType}/{metricName}/{metriccValue}", storage.MetricsHandler).Methods("POST")
+	router.HandleFunc("/", storage.GetAllMetricsHandler).Methods("GET")
 
 	fmt.Println("Server listening on http://localhost:8080")
-	err := http.ListenAndServe(`:8080`, nil)
-    if err != nil {
-        panic(err)
-    }
+	err := http.ListenAndServe(":8080", router)
+	if err != nil {
+		panic(err)
+	}
 }
