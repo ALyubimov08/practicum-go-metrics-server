@@ -7,6 +7,7 @@ import (
 	"strings"
 	"github.com/gorilla/mux"
 	"sort"
+	"flag"
 )
 
 // Индекс метрики
@@ -139,15 +140,19 @@ func (ms MemStorage) GetAllMetricsHandler(w http.ResponseWriter, r *http.Request
 
 
 func main() {
-	storage := make(MemStorage)
+	var serverAddress string
+	flag.StringVar(&serverAddress, "a", "localhost:8080", "The value for the -a flag")
+	flag.Parse()
 
+	storage := make(MemStorage)
 	router := mux.NewRouter()
 	router.HandleFunc("/value/{metricType}/{metricName}", storage.GetValueHandler).Methods("GET")
 	router.HandleFunc("/update/{metricType}/{metricName}/{metriccValue}", storage.MetricsHandler).Methods("POST")
 	router.HandleFunc("/", storage.GetAllMetricsHandler).Methods("GET")
 
-	fmt.Println("Server listening on http://localhost:8080")
-	err := http.ListenAndServe(":8080", router)
+	fmt.Printf("Server listening on http://%s", serverAddress)
+	listenPort := fmt.Sprintf(":%s", strings.Split(serverAddress, ":")[1])
+	err := http.ListenAndServe(listenPort, router)
 	if err != nil {
 		panic(err)
 	}

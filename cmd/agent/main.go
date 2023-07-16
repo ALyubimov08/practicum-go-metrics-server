@@ -7,21 +7,35 @@ import (
 	"runtime"
 	"time"
 	"math"
-)
-
-const (
-	pollInterval   = 2 * time.Second
-	reportInterval = 10 * time.Second
-	serverAddress  = "http://localhost:8080/update/"
+	"flag"
 )
 
 var (
-	metrics     map[string]uint64
-	PollCount   uint64 = 0
-	RandomValue uint64 = 0
+	metrics        map[string]uint64
+	serverAddress  string
+	pollInterval   time.Duration
+	reportInterval time.Duration
+	PollCount      uint64 = 0
+	RandomValue    uint64 = 0
 )
 
 func main() {
+	var (
+		serverAddressFlag  string 
+		pollIntervalFlag   int
+		reportIntervalFlag int
+	)
+	flag.StringVar(&serverAddressFlag,  "a", "localhost:8080", "The value for the -a flag")
+	flag.IntVar(&pollIntervalFlag,   "p",  2, "The value for the -p flag")
+	flag.IntVar(&reportIntervalFlag, "r", 10, "The value for the -r flag")
+	flag.Parse()
+
+
+	serverAddress  = fmt.Sprintf("http://%s/update/", serverAddressFlag)
+	pollInterval   = time.Duration(pollIntervalFlag) * time.Second
+	reportInterval = time.Duration(reportIntervalFlag) * time.Second
+
+
 	ticker  := time.NewTicker(reportInterval)
 	defer ticker.Stop()
 
