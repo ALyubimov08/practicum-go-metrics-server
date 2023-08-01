@@ -12,6 +12,7 @@ import (
 	"os"
 )
 
+// PollCount is the number of pollings done
 var (
 	metrics        map[string]uint64
 	serverAddress  string
@@ -24,7 +25,7 @@ var (
 func main() {
 	var (
 		err error
-		serverAddressFlag  string 
+		serverAddressFlag  string
 		pollIntervalFlag   int
 		reportIntervalFlag int
 	)
@@ -36,19 +37,19 @@ func main() {
 
 	environmetAddress, exists := os.LookupEnv("ADDRESS")
     if exists { serverAddressFlag = environmetAddress }
-	
+
 	environmetPollInterval, exists := os.LookupEnv("POLL_INTERVAL")
     if exists {
 		if pollIntervalFlag, err = strconv.Atoi(environmetPollInterval); err != nil {
 			panic(err)
 		}
 	}
-	
+
 	environmetReportInterval, exists := os.LookupEnv("REPORT_INTERVAL")
-    if exists {                                                                    
-		if reportIntervalFlag, err = strconv.Atoi(environmetReportInterval); err != nil{           
-            panic(err)                                                             
-        }                                                                          
+    if exists {
+		if reportIntervalFlag, err = strconv.Atoi(environmetReportInterval); err != nil{
+            panic(err)
+        }
     }
 
 fmt.Printf("Running with following parameters:\n" +
@@ -109,7 +110,7 @@ func collectMetrics() {
 		"Sys":              memStats.Sys,
 		"TotalAlloc":       memStats.TotalAlloc,
 	}
-	PollCount   += 1
+	PollCount++
     RandomValue = uint64(time.Now().Nanosecond())
 }
 
